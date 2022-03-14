@@ -24,13 +24,15 @@ func New(u user.UserStorage, en env.EnvStorage) connector.Connector {
 func (c *Conn) AddToEnv(ctx context.Context, user models.User, env models.Env) error {
 	return nil
 }
-func (c *Conn) AddEnvToUser(ctx context.Context, env models.Env, user models.User) error {
-	return nil
-}
+
 func (c *Conn) GetByEnv(ctx context.Context, env models.Env) ([]models.User, error) {
 	return []models.User{}, nil
 }
 
 func (c *Conn) GetByUser(ctx context.Context, user models.User) ([]models.Env, error) {
 	return []models.Env{}, nil
+}
+
+func (c *Conn) DeleteUserFromEnv(ctx context.Context, user models.User, env models.Env) error {
+	return nil
 }
