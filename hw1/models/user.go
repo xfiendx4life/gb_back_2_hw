@@ -5,7 +5,7 @@ import (
 )
 
 type User struct {
-	ID     uuid.UUID
-	Name   string
-	Envs []Env  // TODO something more realistic
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+	Envs []Env     // TODO something more realistic
 }
