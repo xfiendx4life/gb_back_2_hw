@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8test
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: k8test
+  template:
+    metadata:
+      labels:
+        app: k8test
+    spec:
+      containers:
+      - name: k8stest
+        image: docker.io/xfiendx4life/k8_test
+        ports:
+        - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /itsalive
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 15
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /itsalive
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
