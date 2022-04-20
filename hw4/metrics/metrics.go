@@ -106,7 +106,7 @@ func (m *Metr) MesurableQuery(q func(query string, args ...interface{}) (*sql.Ro
 
 func (m *Metr) MesurableQueryRow(q func(query string, args ...interface{}) *sql.Row,
 	query string, args ...interface{}) *sql.Row {
-	name := "query"
+	name := "queryRow"
 	t := time.Now()
 	if m.on {
 		m.Requests.

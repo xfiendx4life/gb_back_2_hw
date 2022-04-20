@@ -20,10 +20,32 @@ func New(path string, mtrcs *metrics.Metr) (Storage, error) {
 	if err != nil {
 		return nil, fmt.Errorf("can't open database: %s", err)
 	}
-	return &store{
+	st := &store{
 		db,
 		mtrcs,
-	}, nil
+	}
+	if err = st.CreateTable(); err != nil {
+		return nil, fmt.Errorf("%s", err)
+	}
+	return st, nil
+}
+
+func (st *store) CreateTable() error {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("panic occured")
+		}
+	}()
+	_, err := st.MesurableExec(st.Exec, `CREATE TABLE IF NOT EXISTS student (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name VARCHAR(64),
+		lastname VARCHAR(64),
+		faculty VARCHAR(5)
+	)`)
+	if err != nil {
+		return fmt.Errorf("can't perform create: %s", err)
+	}
+	return nil
 }
 
 func (st *store) AddStudent(name, lastname, faculty string) (*models.Student, error) { //* with exec
