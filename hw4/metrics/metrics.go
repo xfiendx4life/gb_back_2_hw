@@ -54,33 +54,75 @@ func New(on bool) *Metr {
 	}
 }
 
-func (m *Metr) MesurableExec(e func(string, ...interface{}) (sql.Result, error)) func(query string, args ...interface{}) (sql.Result, error) {
-	return func(query string, args ...interface{}) (sql.Result, error) {
-		t := time.Now()
-		if m.on {
-			m.Requests.
-				WithLabelValues(query, "Exec").
-				Inc()
-		}
-		res, err := e(query, args...)
-		if m.on {
-			var e string
-			if err != nil {
-				m.Errors.WithLabelValues(query, "Exec", err.Error()).Inc()
-				e = err.Error()
-			}
-			m.Duration.
-				WithLabelValues(query, "Exec", e).
-				Observe(time.Since(t).Seconds())
-		}
-		if err != nil {
-			return nil, err
-		}
-		return res, nil
+func (m *Metr) MesurableExec(e func(string, ...interface{}) (sql.Result, error), query string, args ...interface{}) (sql.Result, error) {
+	t := time.Now()
+	if m.on {
+		m.Requests.
+			WithLabelValues(query, "Exec").
+			Inc()
 	}
+	res, err := e(query, args...)
+	if m.on {
+		var e string
+		if err != nil {
+			m.Errors.WithLabelValues(query, "Exec", err.Error()).Inc()
+			e = err.Error()
+		}
+		m.Duration.
+			WithLabelValues(query, "Exec", e).
+			Observe(time.Since(t).Seconds())
+	}
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
-func (m *Metr) check() {
-	db := sql.DB{}
-	m.MesurableExec(db.Exec)
+func (m *Metr) MesurableQuery(q func(query string, args ...interface{}) (*sql.Rows, error),
+	query string, args ...interface{}) (*sql.Rows, error) {
+	name := "query"
+	t := time.Now()
+	if m.on {
+		m.Requests.
+			WithLabelValues(query, name).
+			Inc()
+	}
+	res, err := q(query, args...)
+	if m.on {
+		var e string
+		if err != nil {
+			m.Errors.WithLabelValues(query, name, err.Error()).Inc()
+			e = err.Error()
+		}
+		m.Duration.
+			WithLabelValues(query, name, e).
+			Observe(time.Since(t).Seconds())
+	}
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (m *Metr) MesurableQueryRow(q func(query string, args ...interface{}) *sql.Row,
+	query string, args ...interface{}) *sql.Row {
+	name := "query"
+	t := time.Now()
+	if m.on {
+		m.Requests.
+			WithLabelValues(query, name).
+			Inc()
+	}
+	res := q(query, args...)
+	if m.on {
+		var e string
+		if res.Err() != nil {
+			m.Errors.WithLabelValues(query, name, res.Err().Error()).Inc()
+			e = res.Err().Error()
+		}
+		m.Duration.
+			WithLabelValues(query, name, e).
+			Observe(time.Since(t).Seconds())
+	}
+	return res
 }

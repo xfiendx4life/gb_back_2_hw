@@ -3,6 +3,7 @@ package storage
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/xfiendx4life/gb_back_2_hw/hw4/metrics"
@@ -26,11 +27,12 @@ func New(path string, mtrcs *metrics.Metr) (Storage, error) {
 }
 
 func (st *store) AddStudent(name, lastname, faculty string) (*models.Student, error) { //* with exec
-	// stmt, err := st.Prepare("INSERT INTO students(name, lastname, faculty) values (?, ?, ?)")
-	// if err != nil {
-	// 	return nil, fmt.Errorf("can't prepare statement: %s", err)
-	// }
-	res, err := st.MesurableExec(st.Exec)("INSERT INTO student(name, lastname, faculty) values (?, ?, ?)",
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("panic occured")
+		}
+	}()
+	res, err := st.MesurableExec(st.Exec, "INSERT INTO student(name, lastname, faculty) values (?, ?, ?)",
 		name, lastname, faculty)
 	if err != nil {
 		return nil, fmt.Errorf("can't perform exec: %s", err)
@@ -45,12 +47,30 @@ func (st *store) AddStudent(name, lastname, faculty string) (*models.Student, er
 		Lastname: lastname,
 		Faculty:  faculty,
 	}, nil
-
 }
 
 func (st *store) GetStudentByLastname(lastname string) (*models.Student, error) { //* queryRow
-	return nil, nil
+	stud := models.Student{}
+	row := st.MesurableQueryRow(st.QueryRow, `SELECT * FROM student WHERE lastname=? LIMIT 1`, lastname)
+	err := row.Scan(&stud.ID, &stud.Name, &stud.Lastname, &stud.Faculty)
+	if err != nil {
+		return nil, fmt.Errorf("can't read data: %s", err)
+	}
+	return &stud, nil
 }
 func (st *store) GetAllStudentsForFaculty(faculty string) ([]models.Student, error) { //* query
-	return nil, nil
+	stds := make([]models.Student, 0)
+	rows, err := st.MesurableQuery(st.Query, `SELECT * FROM student WHERE faculty=?`, faculty)
+	if err != nil {
+		return nil, fmt.Errorf("can't get students for faculty %s", err)
+	}
+	for rows.Next() {
+		stud := models.Student{}
+		err = rows.Scan(&stud.ID, &stud.Name, &stud.Lastname, &stud.Faculty)
+		if err != nil {
+			return nil, fmt.Errorf("can't scan results %s", err)
+		}
+		stds = append(stds, stud)
+	}
+	return stds, nil
 }
