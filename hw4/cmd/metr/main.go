@@ -27,6 +27,7 @@ func main() {
 	server.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 	server.POST("/add", del.SetStudent)
 	server.GET("/get", del.GetByLastName)
+	server.GET("/byfaculty", del.GetAllByFaculty)
 	go func() {
 		err := server.Start(":8080")
 		if err != nil {

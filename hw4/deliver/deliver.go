@@ -40,7 +40,17 @@ func (d *Del) GetByLastName(e echo.Context) error {
 	lName := e.QueryParam("lastname")
 	res, err := d.st.GetStudentByLastname(lName)
 	if err != nil {
-		log.Errorf("can't decode body")
+		log.Errorf("can't get student drom db: %s", err)
+		return echo.ErrInternalServerError
+	}
+	return e.JSON(http.StatusOK, res)
+}
+
+func (d *Del) GetAllByFaculty(e echo.Context) error {
+	faculty := e.QueryParam("faculty")
+	res, err := d.st.GetAllStudentsForFaculty(faculty)
+	if err != nil {
+		log.Errorf("can't get from db %s: ", err)
 		return echo.ErrInternalServerError
 	}
 	return e.JSON(http.StatusOK, res)
