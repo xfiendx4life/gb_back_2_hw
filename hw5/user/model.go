@@ -1,6 +1,13 @@
 package user
 
-import "database/sql"
+import (
+	"database/sql"
+
+	_ "github.com/lib/pq"
+
+	"github.com/xfiendx4life/gb_back_2_hw/hw5/manager"
+	"github.com/xfiendx4life/gb_back_2_hw/hw5/pool"
+)
 
 type User struct {
 	UserId int
@@ -9,7 +16,7 @@ type User struct {
 	Spouse int
 }
 
-func (u *User) connection() (*sql.DB, error) {
+func (u *User) connection(m *manager.Manager, p *pool.Pool) (*sql.DB, error) {
 	s, err := m.ShardById(u.UserId)
 	if err != nil {
 		return nil, err
@@ -17,8 +24,8 @@ func (u *User) connection() (*sql.DB, error) {
 	return p.Connection(s.Address)
 }
 
-func (u *User) Create() error {
-	c, err := u.connection()
+func (u *User) Create(m *manager.Manager, p *pool.Pool) error {
+	c, err := u.connection(m, p)
 	if err != nil {
 		return err
 	}
@@ -26,8 +33,8 @@ func (u *User) Create() error {
 		u.Name, u.Age, u.Spouse)
 	return err
 }
-func (u *User) Read() error {
-	c, err := u.connection()
+func (u *User) Read(m *manager.Manager, p *pool.Pool) error {
+	c, err := u.connection(m, p)
 	if err != nil {
 		return err
 	}
@@ -39,8 +46,8 @@ func (u *User) Read() error {
 		&u.Spouse,
 	)
 }
-func (u *User) Update() error {
-	c, err := u.connection()
+func (u *User) Update(m *manager.Manager, p *pool.Pool) error {
+	c, err := u.connection(m, p)
 	if err != nil {
 		return err
 	}
@@ -49,8 +56,8 @@ func (u *User) Update() error {
 		u.Name, u.Age, u.Spouse)
 	return err
 }
-func (u *User) Delete() error {
-	c, err := u.connection()
+func (u *User) Delete(m *manager.Manager, p *pool.Pool) error {
+	c, err := u.connection(m, p)
 	if err != nil {
 		return err
 	}

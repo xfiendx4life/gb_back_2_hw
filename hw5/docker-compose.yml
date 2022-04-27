@@ -1,20 +1,20 @@
 services:
   shard_0:
-    image: postgres:14.1
+    image: docker.io/bitnami/postgresql:14
     ports:
     - 8100:5432
     environment:
     - POSTGRESQL_REPLICATION_MODE=master
     - POSTGRESQL_REPLICATION_USER=replicator
     - POSTGRESQL_REPLICATION_PASSWORD=secret_password
-    - POSTGRES_USERNAME=test
-    - POSTGRES_PASSWORD=test
+    - POSTGRESQL_USERNAME=test
+    - POSTGRESQL_PASSWORD=test
     - POSTGRESQL_DATABASE=test
     - ALLOW_EMPTY_PASSWORD=yes
     volumes:
       - ./init:/docker-entrypoint-initdb.d
   replica_0:
-    image: postgres:14.1
+    image: docker.io/bitnami/postgresql:14
     ports:
     - 8101:5432
     depends_on:
@@ -25,11 +25,11 @@ services:
     - POSTGRESQL_REPLICATION_PASSWORD=secret_password
     - POSTGRESQL_MASTER_HOST=shard_0
     - POSTGRESQL_MASTER_PORT_NUMBER=5432
-    - POSTGRES_PASSWORD=test
+    - POSTGRESQL_PASSWORD=test
     - ALLOW_EMPTY_PASSWORD=yes
   
   shard_1:
-    image: postgres:14.1
+    image: docker.io/bitnami/postgresql:14
     ports:
     - 8110:5432
     environment:
@@ -37,11 +37,13 @@ services:
     - POSTGRESQL_REPLICATION_USER=replicator
     - POSTGRESQL_REPLICATION_PASSWORD=secret_password
     - POSTGRESQL_USERNAME=test
-    - POSTGRES_PASSWORD=test
+    - POSTGRESQL_PASSWORD=test
     - POSTGRESQL_DATABASE=test
     - ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d
   replica_1:
-    image: postgres:14.1
+    image: docker.io/bitnami/postgresql:14
     ports:
     - 8111:5432
     depends_on:
@@ -52,10 +54,10 @@ services:
     - POSTGRESQL_REPLICATION_PASSWORD=secret_password
     - POSTGRESQL_MASTER_HOST=shard_1
     - POSTGRESQL_MASTER_PORT_NUMBER=5432
-    - POSTGRES_PASSWORD=test
+    - POSTGRESQL_PASSWORD=test
     - ALLOW_EMPTY_PASSWORD=yes
   shard_2:
-    image: postgres:14.1
+    image: docker.io/bitnami/postgresql:14
     ports:
     - 8120:5432
     environment:
@@ -63,11 +65,13 @@ services:
     - POSTGRESQL_REPLICATION_USER=replicator
     - POSTGRESQL_REPLICATION_PASSWORD=secret_password
     - POSTGRESQL_USERNAME=test
-    - POSTGRES_PASSWORD=test
+    - POSTGRESQL_PASSWORD=test
     - POSTGRESQL_DATABASE=test
     - ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+        - ./init:/docker-entrypoint-initdb.d
   replica_2:
-    image: postgres:14.1
+    image: docker.io/bitnami/postgresql:14
     ports:
     - 8121:5432
     depends_on:
@@ -78,5 +82,5 @@ services:
     - POSTGRESQL_REPLICATION_PASSWORD=secret_password
     - POSTGRESQL_MASTER_HOST=shard_2
     - POSTGRESQL_MASTER_PORT_NUMBER=5432
-    - POSTGRES_PASSWORD=test
+    - POSTGRESQL_PASSWORD=test
     - ALLOW_EMPTY_PASSWORD=yes

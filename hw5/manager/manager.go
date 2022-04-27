@@ -31,7 +31,7 @@ func (m *Manager) ShardById(entityId int) (*Shard, error) {
 	if entityId < 0 {
 		return nil, ErrorShardNotFound
 	}
-	n := entityId / m.size
+	n := entityId % m.size // TODO: think about devision to shards
 	if s, ok := m.ss.Load(n); ok {
 		return s.(*Shard), nil
 	}

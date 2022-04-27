@@ -1,3 +1,4 @@
+\c test
 CREATE TABLE "users" (
 "user_id" INT,
 "name" VARCHAR,
