@@ -25,6 +25,18 @@ func main() {
 		Address: "port=8120 user=test password=test dbname=test sslmode=disable",
 		Number:  2,
 	})
+	m.Add(&manager.Shard{
+		Address: "port=8101 user=test password=test dbname=test sslmode=disable",
+		Number:  10,
+	})
+	m.Add(&manager.Shard{
+		Address: "port=8111 user=test password=test dbname=test sslmode=disable",
+		Number:  11,
+	})
+	m.Add(&manager.Shard{
+		Address: "port=8121 user=test password=test dbname=test sslmode=disable",
+		Number:  12,
+	})
 	uu := []*user.User{
 		{UserId: 1, Name: "Joe Biden", Age: 78, Spouse: 10},
 		{UserId: 10, Name: "Jill Biden", Age: 69, Spouse: 1},
@@ -54,4 +66,10 @@ func main() {
 			fmt.Println(fmt.Errorf("error on create user %v: %w", a, err))
 		}
 	}
+	u := user.User{UserId: 13}
+	err := u.Read(m, p)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(u)
 }

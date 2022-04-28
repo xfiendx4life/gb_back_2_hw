@@ -2,6 +2,7 @@ package manager
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 )
 
@@ -27,12 +28,16 @@ func NewManager(size int) *Manager {
 func (m *Manager) Add(s *Shard) {
 	m.ss.Store(s.Number, s)
 }
-func (m *Manager) ShardById(entityId int) (*Shard, error) {
+func (m *Manager) ShardById(entityId int, master bool) (*Shard, error) {
 	if entityId < 0 {
 		return nil, ErrorShardNotFound
 	}
 	n := entityId % m.size // TODO: think about devision to shards
+	if !master {
+		n += 10
+	}
 	if s, ok := m.ss.Load(n); ok {
+		fmt.Println(s)
 		return s.(*Shard), nil
 	}
 	return nil, ErrorShardNotFound
