@@ -16,8 +16,8 @@ type Activity struct {
 	Name   string
 }
 
-func (a *Activity) connection(m *manager.Manager, p *pool.Pool, master bool) (*sql.DB, error) {
-	s, err := m.ShardById(a.UserId, master)
+func (a *Activity) connection(m *manager.Manager, p *pool.Pool) (*sql.DB, error) {
+	s, err := m.ShardById(a.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +25,7 @@ func (a *Activity) connection(m *manager.Manager, p *pool.Pool, master bool) (*s
 }
 
 func (a *Activity) Create(m *manager.Manager, p *pool.Pool) error {
-	c, err := a.connection(m, p, true)
+	c, err := a.connection(m, p)
 	if err != nil {
 		return err
 	}
@@ -34,7 +34,7 @@ func (a *Activity) Create(m *manager.Manager, p *pool.Pool) error {
 	return err
 }
 func (a *Activity) Read(m *manager.Manager, p *pool.Pool) error {
-	c, err := a.connection(m, p, false)
+	c, err := a.connection(m, p)
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func (a *Activity) Read(m *manager.Manager, p *pool.Pool) error {
 	)
 }
 func (a *Activity) Update(m *manager.Manager, p *pool.Pool) error {
-	c, err := a.connection(m, p, true)
+	c, err := a.connection(m, p)
 	if err != nil {
 		return err
 	}
@@ -56,7 +56,7 @@ func (a *Activity) Update(m *manager.Manager, p *pool.Pool) error {
 	return err
 }
 func (a *Activity) Delete(m *manager.Manager, p *pool.Pool) error {
-	c, err := a.connection(m, p, true)
+	c, err := a.connection(m, p)
 	if err != nil {
 		return err
 	}

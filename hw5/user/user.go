@@ -16,8 +16,8 @@ type User struct {
 	Spouse int
 }
 
-func (u *User) connection(m *manager.Manager, p *pool.Pool, master bool) (*sql.DB, error) {
-	s, err := m.ShardById(u.UserId, master)
+func (u *User) connection(m *manager.Manager, p *pool.Pool) (*sql.DB, error) {
+	s, err := m.ShardById(u.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +25,7 @@ func (u *User) connection(m *manager.Manager, p *pool.Pool, master bool) (*sql.D
 }
 
 func (u *User) Create(m *manager.Manager, p *pool.Pool) error {
-	c, err := u.connection(m, p, true)
+	c, err := u.connection(m, p)
 	if err != nil {
 		return err
 	}
@@ -34,7 +34,7 @@ func (u *User) Create(m *manager.Manager, p *pool.Pool) error {
 	return err
 }
 func (u *User) Read(m *manager.Manager, p *pool.Pool) error {
-	c, err := u.connection(m, p, false)
+	c, err := u.connection(m, p)
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func (u *User) Read(m *manager.Manager, p *pool.Pool) error {
 	)
 }
 func (u *User) Update(m *manager.Manager, p *pool.Pool) error {
-	c, err := u.connection(m, p, true)
+	c, err := u.connection(m, p)
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func (u *User) Update(m *manager.Manager, p *pool.Pool) error {
 	return err
 }
 func (u *User) Delete(m *manager.Manager, p *pool.Pool) error {
-	c, err := u.connection(m, p, true)
+	c, err := u.connection(m, p)
 	if err != nil {
 		return err
 	}
