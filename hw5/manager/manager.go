@@ -2,11 +2,12 @@ package manager
 
 import (
 	"errors"
-	"fmt"
+	"log"
 	"sync"
 )
 
 type Shard struct {
+	Role    string
 	Address string
 	Number  int
 }
@@ -37,21 +38,24 @@ func NewManager(size int) *Manager {
 func (m *Manager) Add(s *Shard) {
 	m.ss.Store(s.Number, s)
 }
-func (m *Manager) ShardById(entityId int) (*Shard, error) {
+func (m *Manager) ShardById(entityId int, master bool) (*Shard, error) {
 	if entityId < 0 {
 		return nil, ErrorShardNotFound
 	}
 	n := entityId % m.size // TODO: think about devision to shards
-	m.b.Lock()
-	if m.b.balance > 0 {
-		m.b.balance--
-		n += 10
-	} else {
-		m.b.balance++
+	if !master {
+		m.b.Lock()
+		if m.b.balance > 0 {
+			m.b.balance--
+			n += 10
+		} else {
+			m.b.balance++
+		}
+		m.b.Unlock()
 	}
-	m.b.Unlock()
 	if s, ok := m.ss.Load(n); ok {
-		fmt.Println(s)
+		sh := s.(*Shard)
+		log.Printf("operation on shard #%d role: %s\n", sh.Number, sh.Role)
 		return s.(*Shard), nil
 	}
 	return nil, ErrorShardNotFound
