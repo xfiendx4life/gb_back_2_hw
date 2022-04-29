@@ -2,11 +2,12 @@ package manager
 
 import (
 	"errors"
-	"fmt"
+	"log"
 	"sync"
 )
 
 type Shard struct {
+	Role    string
 	Address string
 	Number  int
 }
@@ -37,7 +38,8 @@ func (m *Manager) ShardById(entityId int, master bool) (*Shard, error) {
 		n += 10
 	}
 	if s, ok := m.ss.Load(n); ok {
-		fmt.Println(s)
+		sh := s.(*Shard)
+		log.Printf("operation on shard #%d role: %s\n", sh.Number, sh.Role)
 		return s.(*Shard), nil
 	}
 	return nil, ErrorShardNotFound
