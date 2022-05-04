@@ -7,6 +7,6 @@ import (
 )
 
 type UserStorage interface {
-	Create(ctx context.Context, user models.User)
-	GetUser(ctx context.Context, id int) (models.User, error)
+	Create(ctx context.Context, user *models.User) error
+	GetUser(ctx context.Context, id int) (*models.User, error)
 }

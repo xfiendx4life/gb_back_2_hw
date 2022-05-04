@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/xfiendx4life/gb_back_2_hw/hw6/pkg/models"
@@ -12,9 +13,10 @@ import (
 
 type RedisClient struct {
 	*redis.Client
+	ttl time.Duration
 }
 
-func NewRedisClient(host, port string) (*RedisClient, error) {
+func NewRedisClient(host, port string, ttl time.Duration) (UserStorage, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%s", host, port),
 		Password: "", // TODO: Add from config
@@ -48,4 +50,12 @@ func (c *RedisClient) GetUser(ctx context.Context, id int) (*models.User, error)
 		return nil, fmt.Errorf("can't decode data: %s", err)
 	}
 	return &u, nil
+}
+
+func (c *RedisClient) Create(ctx context.Context, user *models.User) error {
+	err := c.Set(ctx, strconv.Itoa(user.ID), user, c.ttl).Err()
+	if err != nil {
+		return fmt.Errorf("can't add data to redis: %s", err)
+	}
+	return nil
 }
