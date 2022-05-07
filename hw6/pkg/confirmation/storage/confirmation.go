@@ -8,6 +8,6 @@ import (
 
 type ConfirmationStorage interface {
 	Create(ctx context.Context, c *models.Confirmation) error
-	GetConfirmation(ctx context.Context, userId int) (*models.Confirmation, error)
-	Delete(ctx context.Context, userId int) error
+	GetConfirmation(ctx context.Context, name string) (*models.Confirmation, error)
+	Delete(ctx context.Context, name string) error
 }

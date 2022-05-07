@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -36,12 +35,12 @@ func (c *RedisClient) Close() error {
 	return c.Client.Close()
 }
 
-func (c *RedisClient) GetUser(ctx context.Context, id int) (*models.User, error) {
+func (c *RedisClient) GetUser(ctx context.Context, name string) (*models.User, error) {
 	select {
 	case <-ctx.Done():
 		return nil, fmt.Errorf("GetUser done with context")
 	default:
-		data, err := c.Get(ctx, strconv.Itoa(id)).Bytes()
+		data, err := c.Get(ctx, name).Bytes()
 		if err == redis.Nil {
 			// we got empty result, it's not an error
 			return nil, nil
@@ -63,7 +62,7 @@ func (c *RedisClient) Create(ctx context.Context, user *models.User) error {
 	case <-ctx.Done():
 		return fmt.Errorf("user.Create done with context")
 	default:
-		err := c.Set(ctx, strconv.Itoa(user.ID), user, c.ttl).Err()
+		err := c.Set(ctx, user.Name, user, c.ttl).Err()
 		if err != nil {
 			return fmt.Errorf("can't add data to redis: %s", err)
 		}
@@ -71,3 +70,4 @@ func (c *RedisClient) Create(ctx context.Context, user *models.User) error {
 	}
 
 }
+

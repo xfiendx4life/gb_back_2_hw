@@ -4,8 +4,8 @@ import "encoding/json"
 
 // TODO: Structure http://localhost:8080/confirmation/userId/hashedcode
 type Confirmation struct {
-	UserID int    `json:"userId"`
-	Code   string `json:"code"`
+	UserName string `json:"username"`
+	Code     string `json:"code"`
 }
 
 func (c *Confirmation) MarshalBinary() ([]byte, error) {

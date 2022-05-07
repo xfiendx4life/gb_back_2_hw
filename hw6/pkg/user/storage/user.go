@@ -8,5 +8,5 @@ import (
 
 type UserStorage interface {
 	Create(ctx context.Context, user *models.User) error
-	GetUser(ctx context.Context, id int) (*models.User, error)
+	GetUser(ctx context.Context, name string) (*models.User, error)
 }

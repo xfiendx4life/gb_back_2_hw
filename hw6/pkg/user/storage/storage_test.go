@@ -20,7 +20,6 @@ var (
 		DB:       0, // use default DB
 	})
 	target = models.User{
-		ID:       1,
 		Name:     "testname",
 		Password: "123",
 	}
@@ -36,23 +35,23 @@ func TestCreate(t *testing.T) {
 	assert.NoError(t, err)
 	err = client.Create(context.Background(), &target)
 	assert.NoError(t, err)
-	real, err := testClient.Get(context.Background(), "1").Bytes()
+	real, err := testClient.Get(context.Background(), "testname").Bytes()
 	assert.NoError(t, err)
 	uReal := models.User{}
 	_ = json.Unmarshal(real, &uReal)
 	assert.Equal(t, target, uReal)
-	testClient.Del(context.Background(), "1")
+	testClient.Del(context.Background(), "testname")
 }
 
 func TestGet(t *testing.T) {
-	testClient.Set(context.Background(), "1", &target, ttl)
+	testClient.Set(context.Background(), "testname", &target, ttl)
 	client, err := storage.NewUserStorage(
 		"localhost",
 		"6379",
 		time.Duration(2*time.Minute),
 	)
 	assert.NoError(t, err)
-	res, err := client.GetUser(context.Background(), 1)
+	res, err := client.GetUser(context.Background(), "testname")
 	assert.NoError(t, err)
 	assert.Equal(t, target, *res)
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -32,12 +31,12 @@ func NewConfirmationStorage(host, port string, ttl time.Duration) (ConfirmationS
 	return c, nil
 }
 
-func (c *confStore) GetConfirmation(ctx context.Context, userId int) (*models.Confirmation, error) {
+func (c *confStore) GetConfirmation(ctx context.Context, name string) (*models.Confirmation, error) {
 	select {
 	case <-ctx.Done():
 		return nil, fmt.Errorf("GetConfirmation done with context")
 	default:
-		data, err := c.Get(ctx, strconv.Itoa(userId)).Bytes()
+		data, err := c.Get(ctx, name).Bytes()
 		if err == redis.Nil {
 			// we got empty result, it's not an error
 			return nil, nil
@@ -59,7 +58,7 @@ func (c *confStore) Create(ctx context.Context, con *models.Confirmation) error 
 	case <-ctx.Done():
 		return fmt.Errorf("confirmation.Create done with context")
 	default:
-		err := c.Set(ctx, strconv.Itoa(con.UserID), con, c.ttl).Err()
+		err := c.Set(ctx, con.UserName, con, c.ttl).Err()
 		if err != nil {
 			return fmt.Errorf("can't add data to redis: %s", err)
 		}
@@ -67,12 +66,12 @@ func (c *confStore) Create(ctx context.Context, con *models.Confirmation) error 
 	}
 }
 
-func (c *confStore) Delete(ctx context.Context, userID int) error {
+func (c *confStore) Delete(ctx context.Context, name string) error {
 	select {
 	case <-ctx.Done():
 		return fmt.Errorf("confirmation delete done with context")
 	default:
-		err := c.Del(ctx, strconv.Itoa(userID)).Err()
+		err := c.Del(ctx, name).Err()
 		if err != nil {
 			return fmt.Errorf("can't delete confirmation: %s", err)
 		}

@@ -21,7 +21,7 @@ var (
 		DB:       0, // use default DB
 	})
 	targetConf = models.Confirmation{
-		UserID: 1,
+		UserName: "testname",
 		Code:   "testcode",
 	}
 	ttl = time.Duration(2 * time.Minute)
@@ -36,23 +36,23 @@ func TestCreate(t *testing.T) {
 	assert.NoError(t, err)
 	err = client.Create(context.Background(), &targetConf)
 	assert.NoError(t, err)
-	real, err := testClient.Get(context.Background(), "1").Bytes()
+	real, err := testClient.Get(context.Background(), targetConf.UserName).Bytes()
 	assert.NoError(t, err)
 	uReal := models.Confirmation{}
 	_ = json.Unmarshal(real, &uReal)
 	assert.Equal(t, targetConf, uReal)
-	testClient.Del(context.Background(), "1")
+	testClient.Del(context.Background(), targetConf.UserName)
 }
 
 func TestGet(t *testing.T) {
-	testClient.Set(context.Background(), "1", &targetConf, ttl)
+	testClient.Set(context.Background(), targetConf.UserName, &targetConf, ttl)
 	client, err := storage.NewConfirmationStorage(
 		"localhost",
 		"6379",
 		time.Duration(2*time.Minute),
 	)
 	assert.NoError(t, err)
-	res, err := client.GetConfirmation(context.Background(), 1)
+	res, err := client.GetConfirmation(context.Background(), targetConf.UserName)
 	assert.NoError(t, err)
 	assert.Equal(t, targetConf, *res)
 }
