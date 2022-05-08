@@ -43,6 +43,27 @@ func TestCreate(t *testing.T) {
 	testClient.Del(context.Background(), "testname")
 }
 
+func TestCreateOnExistingKey(t *testing.T) {
+	client, err := storage.NewUserStorage(
+		"localhost",
+		"6379",
+		time.Duration(2*time.Minute),
+	)
+	assert.NoError(t, err)
+	err = client.Create(context.Background(), &target)
+	assert.NoError(t, err)
+	tt := target
+	tt.Confirmed = true
+	err = client.Create(context.Background(), &tt)
+	assert.NoError(t, err)
+	real, err := testClient.Get(context.Background(), "testname").Bytes()
+	assert.NoError(t, err)
+	uReal := models.User{}
+	_ = json.Unmarshal(real, &uReal)
+	assert.True(t, uReal.Confirmed)
+	testClient.Del(context.Background(), "testname")
+}
+
 func TestGet(t *testing.T) {
 	testClient.Set(context.Background(), "testname", &target, ttl)
 	client, err := storage.NewUserStorage(

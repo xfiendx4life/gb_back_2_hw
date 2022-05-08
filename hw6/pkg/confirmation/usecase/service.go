@@ -50,7 +50,10 @@ func (c *confCase) Confirm(ctx context.Context, userName, code string) (bool, er
 	default:
 		conf, err := c.store.GetConfirmation(ctx, userName)
 		if err != nil {
-			return false, fmt.Errorf("cant confitm: %s", err)
+			return false, fmt.Errorf("cant confirm: %s", err)
+		}
+		if conf == nil {
+			return false, fmt.Errorf("no confirmation in store")
 		}
 		if conf.Code != code {
 			return false, nil

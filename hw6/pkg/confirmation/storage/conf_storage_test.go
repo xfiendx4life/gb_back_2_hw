@@ -22,7 +22,7 @@ var (
 	})
 	targetConf = models.Confirmation{
 		UserName: "testname",
-		Code:   "testcode",
+		Code:     "testcode",
 	}
 	ttl = time.Duration(2 * time.Minute)
 )
@@ -36,16 +36,16 @@ func TestCreate(t *testing.T) {
 	assert.NoError(t, err)
 	err = client.Create(context.Background(), &targetConf)
 	assert.NoError(t, err)
-	real, err := testClient.Get(context.Background(), targetConf.UserName).Bytes()
+	real, err := testClient.Get(context.Background(), targetConf.UserName+"con").Bytes()
 	assert.NoError(t, err)
 	uReal := models.Confirmation{}
 	_ = json.Unmarshal(real, &uReal)
 	assert.Equal(t, targetConf, uReal)
-	testClient.Del(context.Background(), targetConf.UserName)
+	testClient.Del(context.Background(), targetConf.UserName+"con")
 }
 
 func TestGet(t *testing.T) {
-	testClient.Set(context.Background(), targetConf.UserName, &targetConf, ttl)
+	testClient.Set(context.Background(), targetConf.UserName+"con", &targetConf, ttl)
 	client, err := storage.NewConfirmationStorage(
 		"localhost",
 		"6379",
@@ -55,4 +55,18 @@ func TestGet(t *testing.T) {
 	res, err := client.GetConfirmation(context.Background(), targetConf.UserName)
 	assert.NoError(t, err)
 	assert.Equal(t, targetConf, *res)
+	testClient.Del(context.Background(), targetConf.UserName+"con")
+
+}
+
+func TestGetEmpty(t *testing.T) {
+	client, err := storage.NewConfirmationStorage(
+		"localhost",
+		"6379",
+		time.Duration(2*time.Minute),
+	)
+	assert.NoError(t, err)
+	res, err := client.GetConfirmation(context.Background(), targetConf.UserName)
+	assert.NoError(t, err)
+	assert.Nil(t, res)
 }

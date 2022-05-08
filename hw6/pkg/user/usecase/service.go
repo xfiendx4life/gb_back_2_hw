@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/labstack/gommon/log"
 	"github.com/xfiendx4life/gb_back_2_hw/hw6/pkg/models"
 	"github.com/xfiendx4life/gb_back_2_hw/hw6/pkg/user/storage"
 )
@@ -56,6 +57,7 @@ func (u *UserCase) Confirm(ctx context.Context, name string) error {
 			return fmt.Errorf("can't confirm user: %s", err)
 		}
 		us.Confirmed = true
+		log.Infof("%v", us)
 		err = u.store.Create(ctx, us)
 		if err != nil {
 			return fmt.Errorf("can't set new value to user %s: %s", us.Name, err)
