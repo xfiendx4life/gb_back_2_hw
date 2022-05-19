@@ -1,50 +1,48 @@
 version: "3.7"
 services:
 
-  # api:
-  #   container_name: api
-  #   build:
-  #     dockerfile: Dockerfile
-  #     context: .
-  #   environment:
-  #     - KAFKA_BROKERS=kafka:9092
-  #   ports:
-  #     - 8081:8081
-  #   depends_on:
-  #     - kafka
-  #     - redis
+  api:
+    container_name: api
+    build:
+      dockerfile: Dockerfile
+      context: .
+    environment:
+      - KAFKA_BROKERS=kafka:9092
+    ports:
+      - 8081:8081
+    depends_on:
+      - kafka
+      - redis
   
-  # process:
-  #   container_name: process
-  #   build:
-  #     dockerfile: Dockerfile2
-  #     context: .
-  #   environment:
-  #     - KAFKA_BROKERS=kafka:9092
-  #   depends_on:
-  #     - kafka
-  #     - redis
+  process:
+    container_name: process
+    build:
+      dockerfile: Dockerfile2
+      context: .
+    environment:
+    - KAFKA_BROKERS=kafka:29092
+    depends_on:
+      - kafka
+      - redis
 
   kafka:
-    image: docker.io/bitnami/kafka:latest
+    image: confluentinc/cp-kafka:7.0.1
+    container_name: broker
     ports:
-      - 9092:9092
-    environment:
-      - KAFKA_BROKER_ID=1
-      - KAFKA_ADVERTISED_HOST_NAME=kafka
-      - KAFKA_LISTENERS=PLAINTEXT://:9092
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
-      - KAFKA_CREATE_TOPICS="rates"
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
-      - ALLOW_PLAINTEXT_LISTENER=yes
+    # To learn about configuring Kafka for access across networks see
+    # https://www.confluent.io/blog/kafka-client-cannot-connect-to-broker-on-aws-on-docker-etc/
+      - "9092:9092"
+      - "29092:29092"
     depends_on:
       - zookeeper
-    healthcheck:
-      test:
-        ["CMD", "kafka-topics.sh", "--list", "--zookeeper", "zookeeper:2181"]
-      interval: 30s
-      timeout: 10s
-      retries: 4
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
   redis:
     image: redis:6.0
@@ -52,8 +50,8 @@ services:
       - 6379:6379
 
   zookeeper:
-    image: docker.io/bitnami/zookeeper:3-debian-10
-    ports:
-      - 2181:2181
+    image: confluentinc/cp-zookeeper:7.0.1
+    container_name: zookeeper
     environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000

@@ -60,9 +60,39 @@ func main() {
 	}
 }
 
+// const (
+// 	topic          = "rates"
+// 	broker1Address = "kafka:9092"
+// )
+
+// func main() {
+// 	r := kafka.NewReader(kafka.ReaderConfig{
+// 		Brokers: []string{broker1Address},
+// 		Topic:   topic,
+// 		GroupID: "my-group",
+// 	})
+// 	for {
+// 		// the `ReadMessage` method blocks until we receive the next event
+// 		msg, err := r.ReadMessage(context.Background())
+// 		if err != nil {
+// 			panic("could not read message " + err.Error())
+// 		}
+// 		// after receiving the message, log its value
+// 		fmt.Println("received: ", msg)
+
+// 		err = storage().Do(radix.Cmd(nil, "LPUSH", "result", string(msg.Value)))
+// 		if err != nil {
+// 			log.Println(err)
+// 		}
+// 		if rand.Float64() < .05 {
+// 			_ = storage().Do(radix.Cmd(nil, "LTRIM", "result", "0", "9"))
+// 		}
+// 	}
+// }
+
 func storage() *radix.Pool {
 	var err error
-	s, err := radix.NewPool("tcp", "redis:6379", 1, radix.PoolConnFunc(connFunc))
+	s, err := radix.NewPool("tcp", ":6379", 1, radix.PoolConnFunc(connFunc))
 	if err != nil {
 		panic(err)
 	}

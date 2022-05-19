@@ -20,6 +20,7 @@ COPY --from=build /app/main /app/main
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build /usr/share/zoneinfo /usr/share/zoneinfo
 ENV TZ=Europe/Moscow
+ENV ADDRESS=":8081"
 
 EXPOSE 8081
 

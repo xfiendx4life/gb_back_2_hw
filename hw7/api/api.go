@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"strconv"
 	"time"
 
@@ -23,7 +25,33 @@ var (
 	}
 )
 
-func init() {
+type Server struct {
+	http.Server
+}
+
+func NewServer(addr string, router http.Handler) *Server {
+	return &Server{
+		http.Server{
+			Addr:         addr,
+			Handler:      router,
+			ReadTimeout:  10 * time.Second,
+			WriteTimeout: 10 * time.Second,
+		},
+	}
+}
+
+func (s *Server) Serve() {
+	go s.ListenAndServe()
+}
+
+func (s *Server) Stop() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	s.Shutdown(ctx)
+	cancel()
+}
+
+func main() {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	router := mux.NewRouter()
 	router.
 		HandleFunc("/rate", PostRateHandler).
@@ -31,15 +59,22 @@ func init() {
 	router.
 		HandleFunc("/total", GetTotalHandler).
 		Methods(http.MethodGet)
-}
-
-func main() {
-	if err := http.ListenAndServe(":8081", nil); err != http.ErrServerClosed {
-		panic(fmt.Errorf("error on listen and serve: %v", err))
-	}
+	router.
+		HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("Here we are"))
+		})
+	addr := os.Getenv("ADDRESS")
+	s := NewServer(addr, router)
+	s.Serve()
+	log.Printf("serving at %s\n", addr)
+	<-ctx.Done()
+	s.Stop()
+	cancel()
+	log.Printf("stopped at %v", time.Now())
 }
 
 func GetTotalHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("access total handler")
 	var rates []string
 	err := storage().Do(radix.Cmd(&rates, "LRANGE", "result", "0", "10"))
 	if err != nil {
@@ -69,7 +104,8 @@ func PostRateHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	err := topic().Send(context.Background(), &pubsub.Message{
+	top := topic()
+	err := top.Send(context.Background(), &pubsub.Message{
 		Body: []byte(rate),
 	})
 	if err != nil {
@@ -93,7 +129,7 @@ func topic() *pubsub.Topic {
 
 func storage() *radix.Pool {
 	var err error
-	s, err := radix.NewPool("tcp", "redis:6379", 1, radix.PoolConnFunc(connFunc))
+	s, err := radix.NewPool("tcp", ":6379", 1, radix.PoolConnFunc(connFunc))
 	if err != nil {
 		panic(err)
 	}
