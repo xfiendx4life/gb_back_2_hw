@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/segmentio/kafka-go"
 
 	"github.com/mediocregopher/radix/v3"
-	"gocloud.dev/pubsub"
 	_ "gocloud.dev/pubsub/kafkapubsub"
 )
 
@@ -23,6 +23,11 @@ var (
 			radix.DialTimeout(10*time.Second),
 		)
 	}
+)
+
+const (
+	topic          = "rates"
+	broker1Address = "localhost:9092"
 )
 
 type Server struct {
@@ -104,28 +109,35 @@ func PostRateHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	top := topic()
-	err := top.Send(context.Background(), &pubsub.Message{
-		Body: []byte(rate),
+	wr := kafka.NewWriter(kafka.WriterConfig{
+		Brokers: []string{broker1Address},
+		Topic:   topic,
 	})
-	if err != nil {
-		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
+	if _, err := strconv.Atoi(rate); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		return
+	}
+
+	err := wr.WriteMessages(context.Background(), kafka.Message{
+		Value: []byte(rate),
+	})
+
+	if err != nil {
+		log.Printf("could not write message " + err.Error())
 	}
 }
 
-func topic() *pubsub.Topic {
-	var err error
-	t, err := pubsub.OpenTopic(context.Background(), "kafka://rates")
-	if err != nil {
-		panic(err)
-	}
-	if t != nil {
-		return t
-	}
-	return t
-}
+// func topic() *pubsub.Topic {
+// 	var err error
+// 	t, err := pubsub.OpenTopic(context.Background(), "kafka://:9092/rates")
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	if t != nil {
+// 		return t
+// 	}
+// 	return t
+// }
 
 func storage() *radix.Pool {
 	var err error

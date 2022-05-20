@@ -1,29 +1,29 @@
 version: "3.7"
 services:
 
-  api:
-    container_name: api
-    build:
-      dockerfile: Dockerfile
-      context: .
-    environment:
-      - KAFKA_BROKERS=kafka:9092
-    ports:
-      - 8081:8081
-    depends_on:
-      - kafka
-      - redis
+  # api:
+  #   container_name: api
+  #   build:
+  #     dockerfile: Dockerfile
+  #     context: .
+  #   environment:
+  #     - KAFKA_BROKERS=kafka:9092
+  #   ports:
+  #     - 8081:8081
+  #   depends_on:
+  #     - kafka
+  #     - redis
   
-  process:
-    container_name: process
-    build:
-      dockerfile: Dockerfile2
-      context: .
-    environment:
-    - KAFKA_BROKERS=kafka:29092
-    depends_on:
-      - kafka
-      - redis
+  # process:
+  #   container_name: process
+  #   build:
+  #     dockerfile: Dockerfile2
+  #     context: .
+  #   environment:
+  #   - KAFKA_BROKERS=kafka:29092
+  #   depends_on:
+  #     - kafka
+  #     - redis
 
   kafka:
     image: confluentinc/cp-kafka:7.0.1
@@ -43,11 +43,12 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_CREATE_TOPICS: 'rates'
 
   redis:
-    image: redis:6.0
+    image: redis:latest
     ports:
-      - 6379:6379
+      - "6379:6379"
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.0.1

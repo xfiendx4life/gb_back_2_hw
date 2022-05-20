@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/mediocregopher/radix/v3 v3.8.0
+	github.com/segmentio/kafka-go v0.4.31
 	gocloud.dev v0.25.0
 	gocloud.dev/pubsub/kafkapubsub v0.25.0
 	gocloud.dev/pubsub/natspubsub v0.25.0
@@ -48,6 +49,7 @@ require (
 	github.com/nats-io/nats.go v1.13.1-0.20220121202836-972a071d373d // indirect
 	github.com/nats-io/nkeys v0.3.0 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
+	github.com/pierrec/lz4/v4 v4.1.14 // indirect
 	github.com/streadway/amqp v1.0.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20220309155454-6242fa91716a // indirect
 	google.golang.org/appengine v1.6.7 // indirect
