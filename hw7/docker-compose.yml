@@ -1,58 +1,64 @@
 version: "3.7"
+
+networks:
+  app-tier:
+    driver: bridge
+
 services:
 
-  # api:
-  #   container_name: api
-  #   build:
-  #     dockerfile: Dockerfile
-  #     context: .
-  #   environment:
-  #     - KAFKA_BROKERS=kafka:9092
-  #   ports:
-  #     - 8081:8081
-  #   depends_on:
-  #     - kafka
-  #     - redis
-  
-  # process:
-  #   container_name: process
-  #   build:
-  #     dockerfile: Dockerfile2
-  #     context: .
-  #   environment:
-  #   - KAFKA_BROKERS=kafka:29092
-  #   depends_on:
-  #     - kafka
-  #     - redis
-
-  kafka:
-    image: confluentinc/cp-kafka:7.0.1
-    container_name: broker
-    ports:
-    # To learn about configuring Kafka for access across networks see
-    # https://www.confluent.io/blog/kafka-client-cannot-connect-to-broker-on-aws-on-docker-etc/
-      - "9092:9092"
-      - "29092:29092"
-    depends_on:
-      - zookeeper
+  api:
+    container_name: api
+    build:
+      dockerfile: Dockerfile
+      context: .
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://:29092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_CREATE_TOPICS: 'rates'
+      - BROKER_ADDRESS=nats://nats:4222
+      - REDIS=redis:6379
+    ports:
+      - 8081:8081
+    depends_on:
+      - nats
+      - redis
+    networks:
+      - app-tier
+  
+  process:
+    container_name: process
+    build:
+      dockerfile: Dockerfile2
+      context: .
+    environment:
+    - BROKER_ADDRESS=nats://nats:4222
+    - REDIS=redis:6379
+    depends_on:
+      nats:
+        condition: service_started
+      redis:
+        condition: service_started
+    networks:
+      - app-tier
+
+  nats:
+    container_name: nats
+    image: 'bitnami/nats:latest'
+    ports:
+      - 4222:4222
+      - 6222:6222
+      - 8222:8222
+    networks:
+      - app-tier
+    # healthcheck:
+    #   test: echo $$(wget --server-response http://nats:8222/varz 2>&1 | grep  '200 OK') | grep '200'  || exit 1
+    #   interval: 20s
+    #   timeout: 5s
+    #   retries: 5
+    #   start_period: 40s
+
 
   redis:
+    container_name: redis
     image: redis:latest
     ports:
       - "6379:6379"
-
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.0.1
-    container_name: zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - app-tier

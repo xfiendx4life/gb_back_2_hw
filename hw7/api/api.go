@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/segmentio/kafka-go"
+	"github.com/nats-io/nats.go"
 
 	"github.com/mediocregopher/radix/v3"
 	_ "gocloud.dev/pubsub/kafkapubsub"
@@ -26,8 +26,12 @@ var (
 )
 
 const (
-	topic          = "rates"
-	broker1Address = "localhost:9092"
+	topic = "rates"
+)
+
+var (
+	brokerAddress = os.Getenv("BROKER_ADDRESS")
+	natsConn      *nats.Conn
 )
 
 type Server struct {
@@ -104,44 +108,38 @@ func GetTotalHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func PostRateHandler(w http.ResponseWriter, r *http.Request) {
+
 	rate := r.FormValue("rate")
 	if _, err := strconv.Atoi(rate); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	wr := kafka.NewWriter(kafka.WriterConfig{
-		Brokers: []string{broker1Address},
-		Topic:   topic,
-	})
-	if _, err := strconv.Atoi(rate); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
+
+	if brokerAddress == "" {
+		brokerAddress = nats.DefaultURL
 	}
+	var err error
+	if natsConn == nil {
+		natsConn, err = nats.Connect(brokerAddress)
+		if err != nil {
+			log.Panicf("can't connect to nats on %s %s", brokerAddress, err)
+		}
 
-	err := wr.WriteMessages(context.Background(), kafka.Message{
-		Value: []byte(rate),
-	})
-
+		if err != nil {
+			log.Printf("could not write message " + err.Error())
+		}
+	}
+	err = natsConn.Publish(topic, []byte(rate))
 	if err != nil {
-		log.Printf("could not write message " + err.Error())
+		log.Printf("can't publish to nats %s", err)
 	}
-}
 
-// func topic() *pubsub.Topic {
-// 	var err error
-// 	t, err := pubsub.OpenTopic(context.Background(), "kafka://:9092/rates")
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	if t != nil {
-// 		return t
-// 	}
-// 	return t
-// }
+}
 
 func storage() *radix.Pool {
 	var err error
-	s, err := radix.NewPool("tcp", ":6379", 1, radix.PoolConnFunc(connFunc))
+	addr := os.Getenv("REDIS")
+	s, err := radix.NewPool("tcp", addr, 1, radix.PoolConnFunc(connFunc))
 	if err != nil {
 		panic(err)
 	}
