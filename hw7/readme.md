@@ -128,3 +128,45 @@ Transfer/sec:     34.84KB
 Мы видим почти десятикратное падение rps и двадцатикратное увеличение средней задержки, что по-видимому, обусловлено временем на создание процесса обработки.
 
 Если мы не хотим чтобы у __КАЖДОГО__ сообщения был свой обработчик, то можно сделать несколько отдельных сервисов `process`и запустить их в отдельных контейнерах.
+Однако, в этом случае придется балансировать нагрузку и распределять, какой сервис будет читать в данный момент:
+
++ простейший способ - случайный топик, в который отправляется сообщение:
+```go
+rand.Seed(time.Now().Unix())
+num := rand.Intn(3) + 1
+err = natsConn.Publish(topic+strconv.Itoa(num), []byte(rate))
+```
+При этом запущено 3 копии сервиса `process`, каждый читает из своего топика
+```yaml
+process:
+    container_name: process
+    environment:
+    - TOPIC=rates1
+    ...
+process2:
+    container_name: process2
+    environment:
+    - TOPIC=rates2
+    ...
+process3:
+    container_name: process3
+    environment:
+    - TOPIC=rates3
+    ...
+```
+
+Результат теста:
+```bash
+wrk -c5 -t5 -d1m -s ./wrk.lua 'http://127.0.0.1:8081'
+Running 1m test @ http://127.0.0.1:8081
+  5 threads and 5 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     4.04ms    5.91ms 143.36ms   90.38%
+    Req/Sec   396.64    153.24     1.14k    69.54%
+  118562 requests in 1.00m, 8.48MB read
+Requests/sec:   1972.75
+Transfer/sec:    144.49KB
+```
+Трехкратное падение `rps` по сравнению со стандартным вариантом и четырехкратное увеличение `latency`.
+
+Но это гораздо быстрее, чем единый сервис с отдельным обработчиком каждого сообщения.
