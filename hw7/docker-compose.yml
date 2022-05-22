@@ -22,21 +22,21 @@ services:
     networks:
       - app-tier
   
-  process:
-    container_name: process
-    build:
-      dockerfile: Dockerfile2
-      context: .
-    environment:
-    - BROKER_ADDRESS=nats://nats:4222
-    - REDIS=redis:6379
-    depends_on:
-      nats:
-        condition: service_started
-      redis:
-        condition: service_started
-    networks:
-      - app-tier
+  # process:
+  #   container_name: process
+  #   build:
+  #     dockerfile: Dockerfile2
+  #     context: .
+  #   environment:
+  #   - BROKER_ADDRESS=nats://nats:4222
+  #   - REDIS=redis:6379
+  #   depends_on:
+  #     nats:
+  #       condition: service_started
+  #     redis:
+  #       condition: service_started
+  #   networks:
+  #     - app-tier
 
   nats:
     container_name: nats

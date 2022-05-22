@@ -1,12 +1,11 @@
-package main
+package process
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"math/rand"
 	"os"
-	"os/signal"
+	"sync/atomic"
 	"time"
 
 	"github.com/mediocregopher/radix/v3"
@@ -23,32 +22,44 @@ var (
 )
 
 const (
-	topic = "rates"
+	topic = "rates" // ? make it a New() parameter
 )
 
-var brokerAddress = os.Getenv("BROKER_ADDRESS")
+type Process struct {
+	brokerAddress string
+}
 
-func main() {
+func New() *Process {
+	brokerAddress := os.Getenv("BROKER_ADDRESS")
 	if brokerAddress == "" {
 		brokerAddress = nats.DefaultURL
 	}
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
-	nc, err := nats.Connect(brokerAddress)
+	return &Process{
+		brokerAddress: brokerAddress,
+	}
+}
+
+func (p *Process) Proceed(counter *int64) {
+	nc, err := nats.Connect(p.brokerAddress)
 	if err != nil {
 		log.Printf("can't connect to nats %s \n", err)
 	}
 	nc.Subscribe(topic, func(m *nats.Msg) {
 		fmt.Printf("received: %s\n", string(m.Data))
-		err = storage().Do(radix.Cmd(nil, "LPUSH", "result", string(m.Data)))
+		pool := storage()
+		err = pool.Do(radix.Cmd(nil, "LPUSH", "result", string(m.Data)))
 		if err != nil {
 			log.Println(err)
 		}
+
 		if rand.Float64() < .05 {
-			_ = storage().Do(radix.Cmd(nil, "LTRIM", "result", "0", "9"))
+			_ = pool.Do(radix.Cmd(nil, "LTRIM", "result", "0", "9"))
 		}
+		pool.Close()
+		nc.Close()
+		atomic.AddInt64(counter, -1)
 	})
-	<-ctx.Done()
-	cancel()
+
 }
 
 func storage() *radix.Pool {

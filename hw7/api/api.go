@@ -8,12 +8,14 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/nats-io/nats.go"
 
 	"github.com/mediocregopher/radix/v3"
+	"github.com/xfiendx4life/gb_back_2_hw/hw7/process"
 	_ "gocloud.dev/pubsub/kafkapubsub"
 )
 
@@ -32,6 +34,7 @@ const (
 var (
 	brokerAddress = os.Getenv("BROKER_ADDRESS")
 	natsConn      *nats.Conn
+	opened        int64
 )
 
 type Server struct {
@@ -69,8 +72,8 @@ func main() {
 		HandleFunc("/total", GetTotalHandler).
 		Methods(http.MethodGet)
 	router.
-		HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("Here we are"))
+		HandleFunc("/opened", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte(fmt.Sprintf("currently opened connections %d", opened)))
 		})
 	addr := os.Getenv("ADDRESS")
 	s := NewServer(addr, router)
@@ -114,7 +117,10 @@ func PostRateHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
+	go func() {
+		atomic.AddInt64(&opened, 1)
+		process.New().Proceed(&opened)
+	}()
 	if brokerAddress == "" {
 		brokerAddress = nats.DefaultURL
 	}
@@ -133,6 +139,10 @@ func PostRateHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("can't publish to nats %s", err)
 	}
+	// ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+
+	// <-ctx.Done()
+	// cancel()
 
 }
 
