@@ -28,6 +28,41 @@ services:
       dockerfile: Dockerfile2
       context: .
     environment:
+    - TOPIC=rates1
+    - BROKER_ADDRESS=nats://nats:4222
+    - REDIS=redis:6379
+    depends_on:
+      nats:
+        condition: service_started
+      redis:
+        condition: service_started
+    networks:
+      - app-tier
+
+  process2:
+    container_name: process2
+    build:
+      dockerfile: Dockerfile2
+      context: .
+    environment:
+    - TOPIC=rates2
+    - BROKER_ADDRESS=nats://nats:4222
+    - REDIS=redis:6379
+    depends_on:
+      nats:
+        condition: service_started
+      redis:
+        condition: service_started
+    networks:
+      - app-tier
+
+  process3:
+    container_name: process3
+    build:
+      dockerfile: Dockerfile2
+      context: .
+    environment:
+    - TOPIC=rates3
     - BROKER_ADDRESS=nats://nats:4222
     - REDIS=redis:6379
     depends_on:

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
@@ -129,7 +130,9 @@ func PostRateHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("could not write message " + err.Error())
 		}
 	}
-	err = natsConn.Publish(topic, []byte(rate))
+	rand.Seed(time.Now().Unix())
+	num := rand.Intn(3) + 1
+	err = natsConn.Publish(topic+strconv.Itoa(num), []byte(rate))
 	if err != nil {
 		log.Printf("can't publish to nats %s", err)
 	}

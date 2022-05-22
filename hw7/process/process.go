@@ -22,11 +22,8 @@ var (
 	}
 )
 
-const (
-	topic = "rates"
-)
-
 var brokerAddress = os.Getenv("BROKER_ADDRESS")
+var topic = os.Getenv("TOPIC")
 
 func main() {
 	if brokerAddress == "" {
