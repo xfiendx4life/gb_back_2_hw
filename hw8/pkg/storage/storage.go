@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/elastic/go-elasticsearch/esapi"
-	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch/v7/esapi"
+	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/xfiendx4life/gb_back_2_hw/hw8/pkg/models"
 )
 
@@ -35,7 +35,11 @@ func (s *Storage) Insert(ctx context.Context, data *models.Item) error {
 			return fmt.Errorf("can't marshal json %s", err)
 		}
 		request := esapi.IndexRequest{Index: "items", DocumentID: data.Id.String(), Body: strings.NewReader(string(jsonString))}
-		request.Do(ctx, s.es)
+		resp, err := request.Do(ctx, s.es)
+		_ = resp
+		if err != nil {
+			return fmt.Errorf("can't add data %s", err)
+		}
 	}
 	return nil
 
