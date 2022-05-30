@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
-	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"github.com/elastic/go-elasticsearch/v7"
+	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"github.com/xfiendx4life/gb_back_2_hw/hw8/pkg/models"
 )
 
@@ -43,4 +44,54 @@ func (s *Storage) Insert(ctx context.Context, data *models.Item) error {
 	}
 	return nil
 
+}
+
+// curl -XPOST -H 'Content-Type: application/json'  "http://localhost:9200/_search" -d'{
+// 		"query": {
+// 			"simple_query_string": {
+// 			  "query": %s",
+// 			  "fields": [
+// 				"name^2",
+// 				"seller"
+// 			  ]
+// 			}
+// 		  }
+// 		}'
+
+func (s *Storage) Find(ctx context.Context, searchString string) ([](*models.Item), error) {
+	query := fmt.Sprintf(`{
+		"query": {
+		  "query_string": {
+			"query": "%s",
+			"fields": [
+			  "name^2",
+			  "seller"
+			],
+			"type": "most_fields"
+		  }
+		}
+	  }`, searchString)
+	res, err := s.es.Search(
+		s.es.Search.WithBody(strings.NewReader(query)),
+		s.es.Search.WithPretty(),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("can't get data from es %s", err)
+	}
+	resData := make([](*models.Item), 0)
+	var resMap map[string]interface{}
+	err = json.NewDecoder(res.Body).Decode(&resMap)
+	if err != nil {
+		return nil, fmt.Errorf("can't decode result %s", err)
+	}
+	log.Println(resMap)
+	for _, hit := range resMap["hits"].(map[string]interface{})["hits"].([]interface{}) {
+		// log.Println(hit.(map[string]interface{})["_source"])
+		m, err := models.MapToItem(hit.(map[string]interface{})["_source"].(map[string]interface{}))
+		if err != nil {
+			return nil, err
+		}
+		resData = append(resData, m)
+	}
+	return resData, nil
 }
