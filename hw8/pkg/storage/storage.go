@@ -9,6 +9,7 @@ import (
 
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
+	"github.com/google/uuid"
 	"github.com/xfiendx4life/gb_back_2_hw/hw8/pkg/models"
 )
 
@@ -31,6 +32,7 @@ func (s *Storage) Insert(ctx context.Context, data *models.Item) error {
 	case <-ctx.Done():
 		return fmt.Errorf("done with context")
 	default:
+		data.Id = uuid.New()
 		jsonString, err := json.Marshal(data)
 		if err != nil {
 			return fmt.Errorf("can't marshal json %s", err)
@@ -45,18 +47,6 @@ func (s *Storage) Insert(ctx context.Context, data *models.Item) error {
 	return nil
 
 }
-
-// curl -XPOST -H 'Content-Type: application/json'  "http://localhost:9200/_search" -d'{
-// 		"query": {
-// 			"simple_query_string": {
-// 			  "query": %s",
-// 			  "fields": [
-// 				"name^2",
-// 				"seller"
-// 			  ]
-// 			}
-// 		  }
-// 		}'
 
 func (s *Storage) Find(ctx context.Context, searchString string) ([](*models.Item), error) {
 	query := fmt.Sprintf(`{

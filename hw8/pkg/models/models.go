@@ -1,6 +1,9 @@
 package models
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/google/uuid"
 )
 
@@ -12,13 +15,13 @@ type Item struct {
 }
 
 func MapToItem(data map[string]interface{}) (m *Item, err error) {
-	// defer func() {
-	// 	if r := recover(); r != nil {
-	// 		log.Printf("%v", r)
-	// 		log.Println("panic recovered")
-	// 		err = fmt.Errorf("panic occured, can't parse data to Item model")
-	// 	}
-	// }()
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("%v", r)
+			log.Println("panic recovered")
+			err = fmt.Errorf("panic occured, can't parse data to Item model")
+		}
+	}()
 	m = &Item{}
 	m.Id, err = uuid.Parse(data["id"].(string))
 	m.Name = data["name"].(string)
