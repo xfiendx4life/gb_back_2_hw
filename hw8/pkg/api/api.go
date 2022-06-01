@@ -45,11 +45,13 @@ func AddCard(w http.ResponseWriter, r *http.Request) {
 	var card models.Item
 	err := json.NewDecoder(r.Body).Decode(&card)
 	if err != nil {
+		log.Printf("can't decode body %s\n", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	st, err := storage.New()
 	if err != nil {
+		log.Printf("can't connect to storage %s\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -64,6 +66,7 @@ func AddCard(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	log.Printf("data accepted\n")
 	w.WriteHeader(http.StatusAccepted)
 }
 
@@ -71,11 +74,15 @@ func GetItem(w http.ResponseWriter, r *http.Request) {
 	log.Println("ready to get item")
 	searchString, ok := mux.Vars(r)["search"]
 	if !ok {
+		log.Printf("Can't get vars from path \n")
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 	st, err := storage.New()
 	if err != nil {
+		log.Printf("Error while connecting to storage %s\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	resChan := make(chan []*models.Item, 1)
@@ -86,10 +93,12 @@ func GetItem(w http.ResponseWriter, r *http.Request) {
 	}(ctx)
 	select {
 	case <-ctx.Done():
-		cancel()
+		log.Println("Done with context")
 	case res := <-resChan:
+		log.Println("Got answer")
 		json.NewEncoder(w).Encode(res)
 	}
+	cancel()
 }
 
 func Start(addr, port string) {
