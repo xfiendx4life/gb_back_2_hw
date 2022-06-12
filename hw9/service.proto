@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+
+option go_package = "/pricerdr";
+
+message Item {
+    string name = 1;
+    int64 price = 2;
+}
+
+message List {
+    string id = 1;
+    repeated Item items = 2;
+}
+
+message ListId {
+    string id = 1;
+}
+
+service ListService {
+    rpc Create(List) returns (ListId) {}
+    rpc Read(ListId) returns (List) {}
+    rpc Update(List) returns (ListId) {}
+    rpc Delete(ListId) returns (ListId) {}
+}
