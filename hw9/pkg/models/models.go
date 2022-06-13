@@ -5,11 +5,11 @@ import (
 )
 
 type Item struct {
-	Name  string
-	Price int64
+	Name  string `json:"name"`
+	Price int64  `json:"price"`
 }
 
 type List struct {
-	ID    uuid.UUID
-	Items []*Item
+	ID    uuid.UUID `json:"id"`
+	Items []*Item   `json:"items"`
 }
