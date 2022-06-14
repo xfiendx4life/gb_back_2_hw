@@ -125,5 +125,14 @@ func (l *Local) Update(ctx context.Context, id uuid.UUID, newItems []*models.Ite
 	}
 }
 func (l *Local) Delete(ctx context.Context, id uuid.UUID) error {
-	return nil
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("done with context")
+	default:
+		err := os.Remove(filepath.Join(l.Path, id.String()))
+		if err != nil {
+			return fmt.Errorf("can't delete list: %s", err)
+		}
+		return nil
+	}
 }

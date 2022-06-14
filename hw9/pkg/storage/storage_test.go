@@ -127,3 +127,69 @@ func TestUpdate(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEqualValues(t, lst, toCheck)
 }
+
+func TestUpdateError(t *testing.T) {
+	ts := &testStore{
+		path: "./testpath",
+	}
+	ts.prepare()
+	defer ts.clean()
+	lst := models.List{
+		ID: uuid.New(),
+		Items: []*models.Item{
+			{Name: "test1",
+				Price: 10},
+			{Name: "test2",
+				Price: 20},
+		},
+	}
+	// ts.writeData(&lst)
+	st, err := storage.New(ts.path, "")
+	require.NoError(t, err)
+	err = st.Update(context.Background(), lst.ID, []*models.Item{{Name: "test1",
+		Price: 10}})
+	require.Error(t, err)
+}
+
+func TestDelete(t *testing.T) {
+	ts := &testStore{
+		path: "./testpath",
+	}
+	ts.prepare()
+	defer ts.clean()
+	lst := models.List{
+		ID: uuid.New(),
+		Items: []*models.Item{
+			{Name: "test1",
+				Price: 10},
+			{Name: "test2",
+				Price: 20},
+		},
+	}
+	ts.writeData(&lst)
+	st, err := storage.New(ts.path, "")
+	require.NoError(t, err)
+	err = st.Delete(context.Background(), lst.ID)
+	require.NoError(t, err)
+}
+
+func TestDeleteError(t *testing.T) {
+	ts := &testStore{
+		path: "./testpath",
+	}
+	ts.prepare()
+	defer ts.clean()
+	lst := models.List{
+		ID: uuid.New(),
+		Items: []*models.Item{
+			{Name: "test1",
+				Price: 10},
+			{Name: "test2",
+				Price: 20},
+		},
+	}
+	st, err := storage.New(ts.path, "")
+	require.NoError(t, err)
+	err = st.Delete(context.Background(), lst.ID)
+	require.Error(t, err)
+}
