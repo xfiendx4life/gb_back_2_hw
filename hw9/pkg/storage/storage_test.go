@@ -42,7 +42,7 @@ func TestCreate(t *testing.T) {
 	ts := &testStore{
 		path: "./testpath",
 	}
-	defer ts.clean()
+	// defer ts.clean()
 	ts.prepare()
 	st, err := storage.New(ts.path, "")
 	require.NoError(t, err)
