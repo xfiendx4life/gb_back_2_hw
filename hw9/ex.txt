@@ -1,1 +1,5 @@
 {"id":"311e0467-a754-4286-bf89-47c3a83eeb68","items":[{"name":"test1","price":10},{"name":"test2","price":20}]}
+
+grpcurl -plaintext -d '{"id":"","items":[{"name":"test1","price":10},{"name":"test2","price":20}]}' localhost:9000 ListService/Create
+
+grpcurl -plaintext -d '{"id":"fcab6956-5f4d-4009-942c-7122a7976316"}' localhost:9000 ListService/Read
