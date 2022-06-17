@@ -16,7 +16,8 @@ import (
 
 type Server struct {
 	*pricerdr.UnimplementedListServiceServer
-	st storage.Storage
+	st   storage.Storage
+	grpc *grpc.Server
 }
 
 func New(st storage.Storage) *Server {
@@ -99,26 +100,46 @@ func (s *Server) Read(ctx context.Context, id *pricerdr.ListId) (*pricerdr.List,
 	}
 }
 
-func (s *Server) Update(context.Context, *pricerdr.List) (*pricerdr.ListId, error) {
+// * An incoming priceList contents only rows to update
+func (s *Server) Update(ctx context.Context, price *pricerdr.List) (*pricerdr.ListId, error) {
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("done with context")
+	default:
+		id, err := uuid.Parse(price.Id)
+		if err != nil {
+			return nil, fmt.Errorf("can't parse id: %s", err)
+		}
+		err = s.st.Update(ctx, id, parseItemToModel(price.Items))
+		if err != nil {
+			return nil, fmt.Errorf("can't update price %s: %s", price.Id, err)
+		}
+		return &pricerdr.ListId{Id: price.Id}, nil
+	}
+}
+
+func (s *Server) Delete(ctx context.Context, price *pricerdr.ListId) (*pricerdr.ListId, error) {
 	return nil, nil
 }
 
-func (s *Server) Delete(context.Context, *pricerdr.ListId) (*pricerdr.ListId, error) {
-	return nil, nil
-}
-
-func Listen(server Server, prt string) error {
+func Listen(ctx context.Context, server *Server, prt string) error {
+	server.grpc = grpc.NewServer()
 	lis, err := net.Listen("tcp", prt)
 	if err != nil {
 		return fmt.Errorf("can't start listener")
 	}
 	log.Printf("listen to %s", prt)
-	grpcServer := grpc.NewServer()
-	pricerdr.RegisterListServiceServer(grpcServer, &server)
-	reflection.Register(grpcServer)
-	err = grpcServer.Serve(lis)
+
+	pricerdr.RegisterListServiceServer(server.grpc, server)
+	reflection.Register(server.grpc)
+	err = server.grpc.Serve(lis)
 	if err != nil {
 		return fmt.Errorf("can't serve: %s", err)
 	}
 	return nil
+}
+
+func (s *Server) Shutdown() {
+	s.grpc.GracefulStop()
+	log.Println("server stopped gracefully")
 }

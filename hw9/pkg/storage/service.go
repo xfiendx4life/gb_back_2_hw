@@ -94,7 +94,7 @@ func findItem(name string, data []*models.Item) (item *models.Item, ok bool) {
 }
 
 // Update doesn't delete any items from price, just updates prices
-func (l *Local) Update(ctx context.Context, id uuid.UUID, newItems []*models.Item) error {
+func (l *Local) Update(ctx context.Context, id uuid.UUID, newItems []*models.Item) (error) {
 	select {
 	case <-ctx.Done():
 		return fmt.Errorf("done with context")

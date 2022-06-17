@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"os"
+	"os/signal"
 
 	rpc_server "github.com/xfiendx4life/gb_back_2_hw/hw9/pkg/grpc/pricerdr/server"
 	"github.com/xfiendx4life/gb_back_2_hw/hw9/pkg/storage"
@@ -22,5 +24,11 @@ func main() {
 	if prt = os.Getenv("PORT"); prt == "" {
 		prt = ":8080"
 	}
-	rpc_server.Listen(*server, prt)
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+	go func() {
+		rpc_server.Listen(ctx, server, prt)
+	}()
+	<-ctx.Done()
+	server.Shutdown()
 }
