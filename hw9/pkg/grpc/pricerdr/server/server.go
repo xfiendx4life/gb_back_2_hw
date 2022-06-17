@@ -14,6 +14,8 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
+// TODO: Create Errors with status
+
 type Server struct {
 	*pricerdr.UnimplementedListServiceServer
 	st   storage.Storage
@@ -60,6 +62,7 @@ func parseListFromModel(list *models.List) *pricerdr.List {
 	}
 }
 
+//* Creates pricelist
 func (s *Server) Create(ctx context.Context, price *pricerdr.List) (*pricerdr.ListId, error) {
 	select {
 	case <-ctx.Done():
@@ -82,19 +85,20 @@ func (s *Server) Create(ctx context.Context, price *pricerdr.List) (*pricerdr.Li
 
 }
 
+// * Reads data from price list and returns it
 func (s *Server) Read(ctx context.Context, id *pricerdr.ListId) (*pricerdr.List, error) {
 	select {
 	case <-ctx.Done():
-		return nil, fmt.Errorf("done with context")
+		return &pricerdr.List{}, fmt.Errorf("done with context")
 	default:
 		log.Printf("ready to read list with id %s", id.Id)
 		uid, err := uuid.Parse(id.Id)
 		if err != nil {
-			return nil, fmt.Errorf("can't parse id to uuid %s", err)
+			return &pricerdr.List{}, fmt.Errorf("can't parse id to uuid %s", err)
 		}
 		list, err := s.st.Read(ctx, uid)
 		if err != nil {
-			return nil, fmt.Errorf("can't get data from storage: %s", err)
+			return &pricerdr.List{}, fmt.Errorf("can't get data from storage: %s", err)
 		}
 		return parseListFromModel(list), nil
 	}
@@ -118,10 +122,25 @@ func (s *Server) Update(ctx context.Context, price *pricerdr.List) (*pricerdr.Li
 	}
 }
 
+// * Deletes the whole pricelist
 func (s *Server) Delete(ctx context.Context, price *pricerdr.ListId) (*pricerdr.ListId, error) {
-	return nil, nil
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("done with context")
+	default:
+		uid, err := uuid.Parse(price.Id)
+		if err != nil {
+			return nil, fmt.Errorf("can't parse id to uuid %s", err)
+		}
+		err = s.st.Delete(ctx, uid)
+		if err != nil {
+			return nil, fmt.Errorf("can't delete pricelist %s", err)
+		}
+		return price, nil
+	}
 }
 
+// * Listen registers server and starting it
 func Listen(ctx context.Context, server *Server, prt string) error {
 	server.grpc = grpc.NewServer()
 	lis, err := net.Listen("tcp", prt)
@@ -139,6 +158,7 @@ func Listen(ctx context.Context, server *Server, prt string) error {
 	return nil
 }
 
+//* Gracefully shuts down server
 func (s *Server) Shutdown() {
 	s.grpc.GracefulStop()
 	log.Println("server stopped gracefully")
