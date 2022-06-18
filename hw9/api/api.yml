@@ -1,0 +1,101 @@
+openapi: 3.0.0
+
+info:
+  title: Prcr
+  description: api to work with pricelists
+  version: 1.0.0
+components:
+  schemas:
+    Item:
+      type: object
+      properties:
+        name:
+          type: string
+        price:
+          type: integer
+    List:
+      type: object
+      properties:
+        id:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+
+paths:
+  /list/create:
+    post:
+      operationId: create list
+      parameters:
+      - in: query
+        name: list
+        schema:
+          $ref: '#/components/schemas/List'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                description: list id
+                type: string
+        '400':
+          description: wrong data
+          content: {}
+  /list/{listId}:
+    get:
+      operationId: read list
+      parameters:
+      - in: path
+        name: listId
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful data fetch
+          content:
+            application/json:
+              schema:
+                description: list
+                $ref: '#/components/schemas/List'
+        '400':
+          description: can't fetch data
+          content: {}
+  /list/update:
+    patch:
+      operationId: update list object
+      requestBody:
+        description: update list with list of items to be changed
+        content:
+          application/json:
+            schema:
+              description: list with id and items only to be changed
+              $ref: '#/components/schemas/List'
+      responses:
+        '204':
+          description: successful data changed
+        '500':
+          description: internal error
+        '400':
+          description: wrong request
+  /list/delete/{listId}:
+    delete:
+      operationId: delete list
+      parameters:
+      - in: path
+        required: true
+        name: listId
+        schema:
+          type: string
+      responses:
+        '204':
+          description: successfuly deleted
+        '404':
+          description: no object to delete
+        '500':
+          description: internal error
+
+
+
