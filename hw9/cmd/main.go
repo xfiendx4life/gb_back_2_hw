@@ -16,7 +16,7 @@ import (
 
 func main() {
 	mode := flag.String("mode", "", "set up mode, use n to set a new dir to save data")
-	serverToChoose := flag.String("server", "rest", "choose server to start. rest, rpc or empty for both")
+	serverToChoose := flag.String("server", "", "choose server to start. rest, rpc or empty for both")
 	flag.Parse()
 	dir := os.Getenv("STORAGE")
 	st, err := storage.New(dir, *mode)
@@ -33,6 +33,7 @@ func main() {
 	case *serverToChoose == "rest":
 		e := startREST(st)
 		<-ctx.Done()
+		// TODO: Change ctx for chanel
 		err = e.Shutdown(ctx)
 		if err != nil {
 			log.Fatalf("can't stop rest server: %s", err)
@@ -42,7 +43,11 @@ func main() {
 		e := startREST(st)
 		<-ctx.Done()
 		rpc.Shutdown()
-		e.Shutdown(ctx)
+		// TODO: Change ctx for chanel
+		err = e.Shutdown(ctx)
+		if err != nil {
+			log.Fatalf("can't stop rest server: %s", err)
+		}
 	}
 
 }

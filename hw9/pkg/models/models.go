@@ -10,6 +10,6 @@ type Item struct {
 }
 
 type List struct {
-	ID    uuid.UUID `json:"id"`
+	ID    uuid.UUID `json:"id,omitempty"`
 	Items []*Item   `json:"items"`
 }
