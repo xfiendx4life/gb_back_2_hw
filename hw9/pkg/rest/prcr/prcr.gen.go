@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -16,27 +17,28 @@ import (
 	"github.com/deepmap/oapi-codegen/pkg/runtime"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
+	"github.com/xfiendx4life/gb_back_2_hw/hw9/pkg/models"
 )
 
 // Item defines model for Item.
-type Item struct {
-	Name  *string `json:"name,omitempty"`
-	Price *int    `json:"price,omitempty"`
-}
+// type Item struct {
+// 	Name  *string `json:"name,omitempty"`
+// 	Price *int    `json:"price,omitempty"`
+// }
 
 // List defines model for List.
-type List struct {
-	Id    *string `json:"id,omitempty"`
-	Items *[]Item `json:"items,omitempty"`
-}
+// type List struct {
+// 	Id    *string `json:"id,omitempty"`
+// 	Items *[]Item `json:"items,omitempty"`
+// }
 
 // CreateListParams defines parameters for CreateList.
 type CreateListParams struct {
-	List *List `form:"list,omitempty" json:"list,omitempty"`
+	List *models.List `form:"list,omitempty" json:"list,omitempty"`
 }
 
 // UpdateListObjectJSONBody defines parameters for UpdateListObject.
-type UpdateListObjectJSONBody = List
+type UpdateListObjectJSONBody = models.List
 
 // UpdateListObjectJSONRequestBody defines body for UpdateListObject for application/json ContentType.
 type UpdateListObjectJSONRequestBody = UpdateListObjectJSONBody
@@ -70,7 +72,7 @@ func (w *ServerInterfaceWrapper) CreateList(ctx echo.Context) error {
 	var params CreateListParams
 	// ------------- Optional query parameter "list" -------------
 
-	err = runtime.BindQueryParameter("form", true, false, "list", ctx.QueryParams(), &params.List)
+	err = json.NewDecoder(ctx.Request().Body).Decode(&params.List)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter list: %s", err))
 	}

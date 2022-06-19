@@ -1,2 +1,2 @@
 run:
-	STORAGE="./storage" PORT=:9000 go run ./cmd/main.go -mode=n
+	STORAGE="./storage" RPCPORT=:8000 RESTPORT=:8080 go run ./cmd/main.go -mode=n
