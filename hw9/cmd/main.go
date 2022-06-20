@@ -23,17 +23,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("can't set up storage %s", err)
 	}
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	switch {
 	case *serverToChoose == "rpc":
 		rpc := startRPC(ctx, st)
-		<-ctx.Done()
+		<-sig
 		rpc.Shutdown()
 	case *serverToChoose == "rest":
 		e := startREST(st)
-		<-ctx.Done()
-		// TODO: Change ctx for chanel
+		<-sig
 		err = e.Shutdown(ctx)
 		if err != nil {
 			log.Fatalf("can't stop rest server: %s", err)
@@ -41,9 +42,8 @@ func main() {
 	default:
 		rpc := startRPC(ctx, st)
 		e := startREST(st)
-		<-ctx.Done()
+		<-sig
 		rpc.Shutdown()
-		// TODO: Change ctx for chanel
 		err = e.Shutdown(ctx)
 		if err != nil {
 			log.Fatalf("can't stop rest server: %s", err)

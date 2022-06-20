@@ -20,6 +20,7 @@ import (
 	"github.com/xfiendx4life/gb_back_2_hw/hw9/pkg/models"
 )
 
+// * GENERATED models changed for own models
 // Item defines model for Item.
 // type Item struct {
 // 	Name  *string `json:"name,omitempty"`
